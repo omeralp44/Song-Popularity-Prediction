@@ -1,0 +1,105 @@
+#PCA
+#PCA Implementation
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import random
+
+data= pd.read_csv("song_data.csv")
+data_matrix1 = data.drop(["song_name", "song_popularity"], axis = 1)
+data_matrix = np.array(data_matrix1)
+
+#data_matrix_T = np.array(data_matrix1)
+print(data_matrix1)
+print(data_matrix)
+#print("First Column: True Y\n", data_matrix[:,0], "\n")
+print("First Data:\n")
+print(data_matrix[0])
+print(data_matrix[0].shape)
+
+
+def PCA_normalization(X):
+ 
+ n = X.shape[0]
+ bar = np.sum(X, axis = 0) / n
+ X1 = X - bar
+ sigma = np.sqrt(np.sum(np.square(X1), axis = 0) / n)
+ X2 = X1 / sigma
+ return X2
+
+data_matrix = PCA_normalization(data_matrix)
+print(data_matrix)
+
+def get_cov_matrix(X):
+ 
+ n = X.shape[0]
+ cov_matrix = (X.T @ X) / n
+ return cov_matrix
+cov_matrix = get_cov_matrix(data_matrix)
+
+def get_eigValues(X):
+ 
+ eig_val, eig_vec = np.linalg.eig(X)
+ 
+ return eig_val, eig_vec
+eig_val, eig_vec = get_eigValues(cov_matrix)
+
+sorted_eig = np.sort(eig_val)[::-1]
+sorted_eig_vec = np.zeros((13,13))
+sorted_eig_vec[:,0] = eig_vec[:,0]
+sorted_eig_vec[:,1] = eig_vec[:,2]
+sorted_eig_vec[:,2] = eig_vec[:,5]
+sorted_eig_vec[:,3] = eig_vec[:,6]
+sorted_eig_vec[:,4] = eig_vec[:,8]
+sorted_eig_vec[:,5] = eig_vec[:,12]
+sorted_eig_vec[:,6] = eig_vec[:,11]
+sorted_eig_vec[:,7] = eig_vec[:,10]
+sorted_eig_vec[:,8] = eig_vec[:,9]
+sorted_eig_vec[:,9] = eig_vec[:,7]
+sorted_eig_vec[:,10] = eig_vec[:,4]
+sorted_eig_vec[:,11] = eig_vec[:,3]
+sorted_eig_vec[:,12] = eig_vec[:,1]
+
+def PVE(X, eig_vec, t):
+ 
+ n = X.shape[0]
+ k = t - 1
+ u_m = eig_vec[:,k]
+ 
+ pve_m = (np.sum(np.square(X @ u_m)) ) / (np.sum(np.square(X)))
+ 
+ return pve_m
+
+k = 13
+pve = 0
+pl_pve = []
+pl_k = []
+pl_tpve = []
+
+for i in range(1, (k + 1)):
+ tpve = PVE(data_matrix, sorted_eig_vec, i)
+ pve = pve + PVE(data_matrix, sorted_eig_vec, i)
+ pl_pve.append(pve)
+ pl_k.append(i)
+ pl_tpve.append(tpve)
+
+plt.figure(figsize = (7,7))
+plt.plot(pl_k, pl_tpve)
+plt.xlabel("Principal Component")
+plt.ylabel("Prop. Variance Explained")
+plt.figure(figsize = (7,7))
+plt.plot(pl_k, pl_pve)
+plt.xlabel("Principal Component")
+plt.ylabel("Cumulative Prop. Variance Explained")
+
+# k = 10
+
+new_eig_vec0 = sorted_eig_vec.T
+new_eig_vec1 = np.delete(new_eig_vec0, 12, 0)
+new_eig_vec2 = np.delete(new_eig_vec1, 11, 0)
+new_eig_vec3 = np.delete(new_eig_vec2, 10, 0) 
+new_eig_vec = new_eig_vec3.T
+print(new_eig_vec.shape)
+z = data_matrix @ new_eig_vec
+print(z.shape)
